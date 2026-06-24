@@ -1,213 +1,1043 @@
-import { useState } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SRGC NexGen ERP Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1e293b;font-size:14px}
+  :root{--blue:#2563eb;--navy:#1e3a8a;--slate:#1e293b;--accent:#f59e0b;--green:#16a34a;--red:#dc2626}
+  .hidden{display:none!important}
+  /* LAYOUT */
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:240px;min-height:100vh;background:var(--slate);color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:50}
+  .main{margin-left:240px;flex:1;padding:28px;min-height:100vh}
+  /* SIDEBAR */
+  .brand{padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .brand-tag{font-size:10px;font-weight:700;color:#93c5fd;letter-spacing:.12em;text-transform:uppercase}
+  .brand-title{font-size:17px;font-weight:800;margin-top:1px}
+  .brand-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+  .user-box{padding:13px 22px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+  .user-name{font-size:13px;font-weight:600}
+  .user-sub{font-size:11px;color:#94a3b8;margin-top:1px}
+  nav{flex:1;padding:10px 8px;overflow-y:auto}
+  .nav-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#cbd5e1;cursor:pointer;margin-bottom:2px;transition:background .15s,color .15s;user-select:none}
+  .nav-link:hover,.nav-link.active{background:var(--blue);color:#fff}
+  .nav-icon{font-size:15px;width:20px;text-align:center}
+  .logout{margin:0 8px 14px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#94a3b8;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;width:calc(100% - 16px);text-align:left;transition:all .15s}
+  .logout:hover{background:rgba(239,68,68,.2);color:#fca5a5}
+  /* PAGES */
+  .page{display:none}.page.active{display:block}
+  /* PAGE HEADER */
+  .page-hdr{margin-bottom:22px}
+  .page-hdr h1{font-size:21px;font-weight:800}
+  .page-hdr p{font-size:12px;color:#64748b;margin-top:3px}
+  /* CARDS */
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .card h2{font-size:14px;font-weight:700;margin-bottom:16px;color:#1e293b}
+  /* STAT CARDS */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:20px}
+  .stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .stat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .stat-val{font-size:22px;font-weight:800;color:#1e293b}
+  .stat-lbl{font-size:11px;color:#64748b;font-weight:600;margin-top:1px}
+  /* FORMS */
+  .form-grid{display:grid;gap:14px}
+  .fg-2{grid-template-columns:1fr 1fr}
+  .fg-3{grid-template-columns:1fr 1fr 1fr}
+  .fg-4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .form-group label{display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+  .form-group input,.form-group select,.form-group textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;color:#1e293b;outline:none;transition:border .15s,box-shadow .15s}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+  textarea{resize:none}
+  /* BUTTONS */
+  .btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;font-family:'Inter',sans-serif}
+  .btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#1d4ed8}
+  .btn-secondary{background:#fff;color:#475569;border:1px solid #e2e8f0}.btn-secondary:hover{background:#f8fafc}
+  .btn-danger{background:#fee2e2;color:var(--red)}.btn-danger:hover{background:#fecaca}
+  .btn-sm{padding:5px 11px;font-size:11px}
+  /* BADGES */
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+  .bg{background:#dcfce7;color:#15803d}
+  .br{background:#fee2e2;color:var(--red)}
+  .ba{background:#fef3c7;color:#92400e}
+  .bb{background:#dbeafe;color:#1d4ed8}
+  /* TABLE */
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0}
+  .tbl td{padding:10px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  .tbl tr:hover td{background:#f8fafc}
+  .tbl .tc{text-align:center}
+  /* ALERT */
+  .alert{padding:10px 14px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .alert-success{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d}
+  .alert-error{background:#fef2f2;border:1px solid #fecaca;color:var(--red)}
+  .alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}
+  /* PROGRESS BAR */
+  .progress{height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin-top:4px}
+  .progress-bar{height:100%;border-radius:4px;transition:width .3s}
+  /* QUICK LINKS */
+  .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:14px;margin-bottom:20px}
+  .quick-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .quick-card:hover{border-color:#93c5fd;box-shadow:0 4px 12px rgba(37,99,235,.1)}
+  .quick-icon{font-size:22px;margin-bottom:8px}
+  .quick-title{font-size:13px;font-weight:700;color:#1e293b;transition:color .15s}
+  .quick-card:hover .quick-title{color:var(--blue)}
+  .quick-desc{font-size:11px;color:#94a3b8;margin-top:2px}
+  /* LOGIN */
+  .login-wrap{min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#0f172a 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-box{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:420px;box-shadow:0 25px 60px rgba(0,0,0,.3)}
+  .login-logo{text-align:center;margin-bottom:28px}
+  .login-logo .ico{width:60px;height:60px;background:var(--blue);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px}
+  .login-logo h1{font-size:21px;font-weight:800;color:#1e293b}
+  .login-logo p{font-size:12px;color:#64748b;margin-top:3px}
+  .login-footer{margin-top:20px;padding-top:16px;border-top:1px solid #f1f5f9;font-size:11px;color:#94a3b8;text-align:center}
+  /* QR BOX */
+  .qr-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;border:2px dashed #e2e8f0;border-radius:12px;min-height:200px;background:#fafafa;gap:12px}
+  .qr-placeholder{font-size:48px;opacity:.3}
+  /* ADMIT CARD PREVIEW */
+  .admit-preview{border:2px dashed #cbd5e1;border-radius:10px;padding:22px;background:#fafafa;font-family:'Courier New',monospace;font-size:12px;color:#334155}
+  .admit-preview .ah{text-align:center;font-weight:700;font-size:14px;margin-bottom:4px;color:#1e293b}
+  .admit-preview .as{text-align:center;color:#64748b;font-size:11px;margin-bottom:14px}
+  .admit-preview .ar{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+  .admit-preview .ak{color:#64748b}.admit-preview .av{font-weight:700;color:#1e293b}
+  /* CHECKLIST */
+  .checklist-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9}
+  .checklist-item:last-child{border:none}
+  .check-ico{font-size:18px;flex-shrink:0}
+  .check-title{font-size:13px;font-weight:600;color:#1e293b}
+  .check-sub{font-size:11px;color:#64748b;margin-top:1px}
+  /* SCROLL */
+  ::-webkit-scrollbar{width:5px}
+  ::-webkit-scrollbar-track{background:#f1f5f9}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+  /* DIVIDER */
+  .div{height:1px;background:#f1f5f9;margin:16px 0}
+  /* INLINE FLEX UTILS */
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .row-between{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .mt-1{margin-top:4px}.mt-2{margin-top:8px}.mt-3{margin-top:14px}.mt-4{margin-top:20px}
+  .mb-1{margin-bottom:4px}.mb-2{margin-bottom:8px}.mb-3{margin-bottom:14px}
+  .text-sm{font-size:12px}.text-xs{font-size:11px}.text-muted{color:#64748b}
+  .fw-7{font-weight:700}.fw-6{font-weight:600}
+  .green{color:#16a34a}.red{color:var(--red)}.blue{color:var(--blue)}.amber{color:#92400e}
+  .fee-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+  .fee-box{background:#f8fafc;border-radius:8px;padding:12px}
+  .fee-box .fl{font-size:11px;color:#64748b;margin-bottom:3px}
+  .fee-box .fv{font-size:15px;font-weight:700;color:#1e293b}
+  .fee-totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding-top:14px;border-top:1px solid #f1f5f9}
+  .subject-row{margin-bottom:12px}
+  .subject-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .note-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  .note-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .note-card .ni{width:40px;height:40px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
+  .note-card h3{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px}
+  .note-card p{font-size:11px;color:#64748b;margin-bottom:8px}
+  .eligible-banner{border-radius:12px;padding:20px;display:flex;align-items:center;gap:16px;margin-bottom:20px}
+  .eligible-banner.yes{background:#f0fdf4;border:2px solid #86efac}
+  .eligible-banner.no{background:#fef2f2;border:2px solid #fca5a5}
+  .eligible-ico{font-size:36px}
+  .eligible-title{font-size:16px;font-weight:700}
+  .eligible-sub{font-size:13px;margin-top:2px}
+  .eligible-banner.yes .eligible-title{color:#15803d}
+  .eligible-banner.yes .eligible-sub{color:#16a34a}
+  .eligible-banner.no .eligible-title{color:var(--red)}
+  .eligible-banner.no .eligible-sub{color:#dc2626}
+  .results-block{margin-bottom:20px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
+  .results-hdr{background:#f8fafc;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0}
+  .results-hdr h3{font-size:14px;font-weight:700;color:#1e293b}
+  .results-hdr .sgpa{font-size:12px;color:#64748b}
+  /* SPINNER */
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* RESPONSIVE GRIDS */
+  @media(max-width:900px){.fg-4{grid-template-columns:1fr 1fr}.fg-3{grid-template-columns:1fr 1fr}.stats-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:600px){.fg-2,.fg-3,.fg-4{grid-template-columns:1fr}.sidebar{width:200px}.main{margin-left:200px;padding:16px}}
+  /* TIMER BADGE */
+  .timer-badge{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;display:inline-block}
+  .timer-ok{background:#dcfce7;color:#15803d}
+  .timer-warn{background:#fee2e2;color:var(--red)}
+  /* FULL WIDTH UTIL */
+  .w-full{width:100%}
+  .input-search{border:1px solid #e2e8f0;border-radius:8px;padding:7px 12px;font-size:13px;font-family:'Inter',sans-serif;outline:none;color:#1e293b}
+  .input-search:focus{border-color:var(--blue)}
+</style>
+</head>
+<body>
 
-// ─── MOCK DATA ──────────────────────────────────────────────────────────────
-const MOCK_USERS = {
-  student: {
-    userId: "SRGC2026CS045", password: "student123",
-    name: "Aryan Sharma", role: "student", avatar: "AS",
-    stream: "CSE", semester: 4, course: "B.Tech",
-    feeStatus: { totalFees: 120000, paidFees: 80000, isDuesCleared: false },
-    rollNo: "2200100140045",
-  },
-  teacher: {
-    userId: "FAC2024ME011", password: "teacher123",
-    name: "Dr. Priya Verma", role: "teacher", avatar: "PV",
-    department: "Computer Science Engineering",
-    assignedSubjects: ["Data Structures", "DBMS", "OS"],
-  },
-  admin: {
-    userId: "ADMIN001", password: "admin123",
-    name: "Prof. R.K. Singh", role: "admin", avatar: "RS",
-  },
-};
-
-const SUBJECTS = [
-  { id: "CS401", name: "Data Structures", code: "KCS-401", teacher: "Dr. Priya Verma", credits: 4 },
-  { id: "CS402", name: "Database Management Systems", code: "KCS-402", teacher: "Dr. Amit Gupta", credits: 4 },
-  { id: "CS403", name: "Operating Systems", code: "KCS-403", teacher: "Dr. Priya Verma", credits: 3 },
-  { id: "CS404", name: "Computer Networks", code: "KCS-404", teacher: "Mr. Vikram Singh", credits: 3 },
-  { id: "CS405", name: "Software Engineering", code: "KCS-405", teacher: "Ms. Neha Sharma", credits: 3 },
-];
-
-const STUDENTS_LIST = [
-  { id: "S001", name: "Aryan Sharma", roll: "2200100140045", attendance: 82, fees: false },
-  { id: "S002", name: "Priya Singh", roll: "2200100140046", attendance: 91, fees: true },
-  { id: "S003", name: "Rahul Kumar", roll: "2200100140047", attendance: 68, fees: false },
-];
-
-// ─── ICONS COMPONENT ────────────────────────────────────────────────────────
-const Icon = ({ name, size = 18, cls = "" }) => {
-  const icons = {
-    shield: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={cls}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-    logout: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={cls}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
-    book: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={cls}><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>,
-    users: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={cls}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>,
-  };
-  return icons[name] || null;
-};
-
-// ─── STAT CARD ────────────────────────────────────────────────────────────────
-const StatCard = ({ label, value, sub, icon, accent = "#3b82f6" }) => (
-  <div style={{
-    background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-    border: "1px solid #1e293b", borderRadius: 14, padding: "20px 22px",
-    flex: "1 1 250px", position: "relative", overflow: "hidden",
-  }}>
-    <div style={{ position: "absolute", top: 0, right: 0, width: 80, height: 80, background: accent, opacity: 0.06, borderRadius: "0 14px 0 80px" }}/>
-    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-      <div>
-        <div style={{ color: "#64748b", fontSize: 12, fontWeight: 500, marginBottom: 6, textTransform: "uppercase" }}>{label}</div>
-        <div style={{ color: "white", fontSize: 22, fontWeight: 700 }}>{value}</div>
-        {sub && <div style={{ color: "#64748b", fontSize: 12, marginTop: 5 }}>{sub}</div>}
-      </div>
-      <div style={{ background: accent + "22", padding: 10, borderRadius: 10, color: accent }}>{icon}</div>
+<!-- ═══════════════════════════════════════════════════════ LOGIN ═══ -->
+<div id="loginPage" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="ico">🎓</div>
+      <h1>SRGC NexGen ERP</h1>
+      <p>Shri Ram Group of Colleges · Muzaffarnagar</p>
+    </div>
+    <div id="loginAlert"></div>
+    <div class="form-group mb-3"><label>Email Address</label><input type="email" id="loginEmail" placeholder="you@srgc.edu.in"></div>
+    <div class="form-group mb-3"><label>Password</label><input type="password" id="loginPass" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-primary w-full mt-3" onclick="doLogin()" id="loginBtn" style="width:100%;justify-content:center;padding:11px">Sign In</button>
+    <div class="login-footer">Contact your administrator to get access credentials.<br><br>
+      <strong>Demo:</strong> student@srgc.in / faculty@srgc.in / admin@srgc.in &nbsp;|&nbsp; Password: <strong>demo123</strong>
     </div>
   </div>
-);
+</div>
 
-// ─── MAIN APP COMPONENT ──────────────────────────────────────────────────────
-export default function App() {
-  const [user, setUser] = useState(null);
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#020817", color: "white", fontFamily: "system-ui, sans-serif" }}>
-      {!user ? (
-        <LoginPage onLogin={setUser} />
-      ) : (
-        <DashboardPage user={user} onLogout={() => setUser(null)} />
-      )}
+<!-- ═══════════════════════════════════════════════════════ APP ═══ -->
+<div id="appShell" class="app hidden">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-tag">SRGC NexGen</div>
+      <div class="brand-title">ERP Portal</div>
+      <div class="brand-sub">Shri Ram Group of Colleges</div>
     </div>
-  );
-}
+    <div class="user-box">
+      <div class="avatar" id="sideAvatar">S</div>
+      <div><div class="user-name" id="sideName">—</div><div class="user-sub" id="sideRole">—</div></div>
+    </div>
+    <nav id="sideNav"></nav>
+    <button class="logout" onclick="logout()">🚪 Sign Out</button>
+  </aside>
 
-// ─── LOGIN PAGE COMPONENT ────────────────────────────────────────────────────
-function LoginPage({ onLogin }) {
-  const [role, setRole] = useState("student");
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  <!-- MAIN -->
+  <main class="main">
 
-  const handleLogin = () => {
-    setError("");
-    const matchedUser = MOCK_USERS[role];
-    if (matchedUser && userId === matchedUser.userId && password === matchedUser.password) {
-      onLogin(matchedUser);
-    } else {
-      setError("गलत आईडी या पासवर्ड! कृपया दोबारा जांचें।");
+    <!-- ─── STUDENT PAGES ──────────────────────────────────── -->
+
+    <!-- S: DASHBOARD -->
+    <div id="pg-s-dashboard" class="page">
+      <div class="page-hdr"><h1 id="s-welcome">Welcome 👋</h1><p id="s-info">—</p></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📋</div><div><div class="stat-val" id="s-att-pct">—</div><div class="stat-lbl">Overall Attendance</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#dcfce7">📚</div><div><div class="stat-val" id="s-sub-count">—</div><div class="stat-lbl">Subjects Enrolled</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">💰</div><div><div class="stat-val" id="s-fee-status">—</div><div class="stat-lbl">Fee Status</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#f3e8ff">🎓</div><div><div class="stat-val" id="s-sem">—</div><div class="stat-lbl">Semester</div></div></div>
+      </div>
+      <div class="card"><h2>Subject-wise Attendance</h2><div id="s-att-bars"><div class="text-muted text-sm">Loading...</div></div></div>
+      <div class="quick-grid">
+        <div class="quick-card" onclick="goto('s-attendance')"><div class="quick-icon">📲</div><div class="quick-title">Scan QR</div><div class="quick-desc">Mark lecture attendance</div></div>
+        <div class="quick-card" onclick="goto('s-results')"><div class="quick-icon">📊</div><div class="quick-title">Results</div><div class="quick-desc">Semester exam results</div></div>
+        <div class="quick-card" onclick="goto('s-fees')"><div class="quick-icon">💰</div><div class="quick-title">Fee Ledger</div><div class="quick-desc">Payment details</div></div>
+        <div class="quick-card" onclick="goto('s-notes')"><div class="quick-icon">📚</div><div class="quick-title">Study Notes</div><div class="quick-desc">Faculty resources</div></div>
+        <div class="quick-card" onclick="goto('s-admit')"><div class="quick-icon">🎫</div><div class="quick-title">Admit Card</div><div class="quick-desc">Download exam permit</div></div>
+      </div>
+    </div>
+
+    <!-- S: ATTENDANCE -->
+    <div id="pg-s-attendance" class="page">
+      <div class="page-hdr"><h1>Attendance</h1><p>Paste QR token from faculty to mark attendance</p></div>
+      <div class="card">
+        <h2>Mark Attendance via QR</h2>
+        <div id="s-scan-alert"></div>
+        <div class="row">
+          <input id="s-qr-token" type="text" placeholder="Paste QR token here..." style="flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:9px 12px;font-size:13px;font-family:'Inter',sans-serif;outline:none">
+          <button class="btn btn-primary" onclick="studentScanQR()" id="s-scan-btn">📲 Check In</button>
+        </div>
+      </div>
+      <div class="card"><h2>Subject-wise Summary</h2><div id="s-att-table"><div class="text-muted text-sm">Loading...</div></div></div>
+      <div class="card"><h2>Recent Records</h2><div id="s-att-recent"><div class="text-muted text-sm">Loading...</div></div></div>
+    </div>
+
+    <!-- S: RESULTS -->
+    <div id="pg-s-results" class="page">
+      <div class="page-hdr"><h1>Examination Results</h1><p>Semester-wise academic performance</p></div>
+      <div id="s-results-wrap"><div class="card"><div class="text-muted text-sm">Loading results...</div></div></div>
+    </div>
+
+    <!-- S: FEES -->
+    <div id="pg-s-fees" class="page">
+      <div class="page-hdr"><h1>Fee Ledger</h1><p>Semester-wise fee payment history</p></div>
+      <div id="s-fees-wrap"><div class="card"><div class="text-muted text-sm">Loading...</div></div></div>
+    </div>
+
+    <!-- S: NOTES -->
+    <div id="pg-s-notes" class="page">
+      <div class="page-hdr"><h1>Study Notes</h1><p>Resources uploaded by your faculty</p></div>
+      <div id="s-notes-wrap"><div class="text-muted text-sm">Loading...</div></div>
+    </div>
+
+    <!-- S: ADMIT CARD -->
+    <div id="pg-s-admit" class="page">
+      <div class="page-hdr"><h1>Admit Card</h1><p>Check eligibility and download your exam admit card</p></div>
+      <div id="s-admit-wrap"><div class="card"><div class="text-muted text-sm">Checking eligibility...</div></div></div>
+    </div>
+
+    <!-- ─── FACULTY PAGES ──────────────────────────────────── -->
+
+    <!-- F: DASHBOARD -->
+    <div id="pg-f-dashboard" class="page">
+      <div class="page-hdr"><h1 id="f-welcome">Good morning 👋</h1><p id="f-info">—</p></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📚</div><div><div class="stat-val" id="f-sub-count">0</div><div class="stat-lbl">Subjects Assigned</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#dcfce7">📝</div><div><div class="stat-val" id="f-today-logs">0</div><div class="stat-lbl">Lectures Today</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">📋</div><div><div class="stat-val" id="f-total-logs">0</div><div class="stat-lbl">Total Logs</div></div></div>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card" onclick="goto('f-qr')"><div class="quick-icon">📲</div><div class="quick-title">Generate QR</div><div class="quick-desc">Start attendance session</div></div>
+        <div class="quick-card" onclick="goto('f-attendance')"><div class="quick-icon">📋</div><div class="quick-title">View Attendance</div><div class="quick-desc">Class-wise records</div></div>
+        <div class="quick-card" onclick="goto('f-notes')"><div class="quick-icon">📚</div><div class="quick-title">Upload Notes</div><div class="quick-desc">Share study materials</div></div>
+        <div class="quick-card" onclick="goto('f-lessonlog')"><div class="quick-icon">📝</div><div class="quick-title">Lesson Log</div><div class="quick-desc">Log today's lecture</div></div>
+      </div>
+      <div class="card"><h2>Recent Lesson Logs</h2><div id="f-recent-logs"><div class="text-muted text-sm">No logs yet.</div></div></div>
+    </div>
+
+    <!-- F: QR GENERATOR -->
+    <div id="pg-f-qr" class="page">
+      <div class="page-hdr"><h1>QR Attendance Generator</h1><p>Generate a geofenced QR code for student check-in</p></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card">
+          <h2>Lecture Details</h2>
+          <div id="f-qr-alert"></div>
+          <div class="form-group mb-2"><label>Subject Code</label><input id="f-sub-code" placeholder="e.g. CS301"></div>
+          <div class="form-group mb-2"><label>Subject Name</label><input id="f-sub-name" placeholder="e.g. Data Structures"></div>
+          <div class="form-group mb-3"><label>Lecture Slot</label><input id="f-slot" placeholder="e.g. 09:00-10:00"></div>
+          <button class="btn btn-primary" onclick="generateQR()" id="f-qr-btn" style="width:100%;justify-content:center">📲 Generate QR Code</button>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div id="f-qr-display">
+            <div class="qr-wrap"><div class="qr-placeholder">📲</div><div class="text-muted text-sm">Fill lecture details and generate</div><div class="text-xs text-muted mt-1">Valid 60s · 10m geofence</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F: ATTENDANCE -->
+    <div id="pg-f-attendance" class="page">
+      <div class="page-hdr"><h1>Attendance Records</h1><p>View and manage class attendance</p></div>
+      <div class="card">
+        <h2>Class Attendance Report</h2>
+        <div class="row mb-3">
+          <input id="f-att-code" class="input-search" placeholder="Subject Code" style="width:160px">
+          <input id="f-att-date" type="date" class="input-search">
+          <button class="btn btn-primary" onclick="fetchFacultyAttendance()">Fetch Records</button>
+        </div>
+        <div id="f-att-summary" class="row mb-2" style="display:none"></div>
+        <div id="f-att-table"><div class="text-muted text-sm">Enter subject code and date to fetch records.</div></div>
+      </div>
+      <div class="card">
+        <h2>Manual Attendance Entry</h2>
+        <div id="f-manual-alert"></div>
+        <div class="form-grid fg-3 mb-3">
+          <div class="form-group"><label>Student ID</label><input id="f-m-sid" placeholder="MongoDB ObjectId"></div>
+          <div class="form-group"><label>Subject Code</label><input id="f-m-scode"></div>
+          <div class="form-group"><label>Subject Name</label><input id="f-m-sname"></div>
+          <div class="form-group"><label>Date</label><input type="date" id="f-m-date"></div>
+          <div class="form-group"><label>Lecture Slot</label><input id="f-m-slot" placeholder="09:00-10:00"></div>
+          <div class="form-group"><label>Status</label><select id="f-m-status"><option>Present</option><option>Absent</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="submitManual()">Submit Manual Entry</button>
+      </div>
+    </div>
+
+    <!-- F: NOTES -->
+    <div id="pg-f-notes" class="page">
+      <div class="page-hdr"><h1>Upload Notes</h1><p>Share study materials with students</p></div>
+      <div class="card">
+        <h2>New Upload</h2>
+        <div id="f-notes-alert"></div>
+        <div class="form-grid fg-3 mb-3">
+          <div class="form-group"><label>Subject Code</label><input id="fn-code"></div>
+          <div class="form-group"><label>Subject Name</label><input id="fn-name"></div>
+          <div class="form-group"><label>Semester</label><input type="number" id="fn-sem"></div>
+          <div class="form-group" style="grid-column:span 3"><label>Title</label><input id="fn-title"></div>
+          <div class="form-group" style="grid-column:span 3"><label>Description</label><textarea id="fn-desc" rows="2"></textarea></div>
+        </div>
+        <button class="btn btn-primary" onclick="uploadNote()">📤 Save Note</button>
+      </div>
+      <div class="card"><h2>Previously Uploaded</h2><div id="f-notes-list"><div class="text-muted text-sm">Loading...</div></div></div>
+    </div>
+
+    <!-- F: LESSON LOG -->
+    <div id="pg-f-lessonlog" class="page">
+      <div class="page-hdr"><h1>Lesson Log</h1><p>Record today's lecture details</p></div>
+      <div class="card">
+        <h2>Add Entry</h2>
+        <div id="f-log-alert"></div>
+        <div class="form-grid fg-3 mb-3">
+          <div class="form-group"><label>Subject Code</label><input id="ll-code"></div>
+          <div class="form-group"><label>Subject Name</label><input id="ll-name"></div>
+          <div class="form-group"><label>Semester</label><input type="number" id="ll-sem"></div>
+          <div class="form-group"><label>Date</label><input type="date" id="ll-date"></div>
+          <div class="form-group"><label>Lecture Slot</label><input id="ll-slot" placeholder="09:00-10:00"></div>
+          <div class="form-group"><label>Teaching Method</label><select id="ll-method"><option>Lecture</option><option>Practical</option><option>Tutorial</option><option>Seminar</option><option>Online</option></select></div>
+          <div class="form-group"><label>Students Present</label><input type="number" id="ll-present"></div>
+          <div class="form-group"><label>Total Students</label><input type="number" id="ll-total"></div>
+          <div class="form-group"><label>Topic Covered</label><input id="ll-topic"></div>
+          <div class="form-group" style="grid-column:span 3"><label>Remarks</label><textarea id="ll-remarks" rows="2"></textarea></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveLessonLog()">📝 Save Log Entry</button>
+      </div>
+      <div class="card"><h2>Log History</h2><div id="f-log-list"><div class="text-muted text-sm">No logs yet.</div></div></div>
+    </div>
+
+    <!-- ─── ADMIN PAGES ──────────────────────────────────── -->
+
+    <!-- A: DASHBOARD -->
+    <div id="pg-a-dashboard" class="page">
+      <div class="page-hdr"><h1>Admin Dashboard</h1><p id="a-date">—</p></div>
+      <div class="stats-grid" id="a-stats-grid">
+        <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">👨‍🎓</div><div><div class="stat-val" id="a-total-students">—</div><div class="stat-lbl">Total Students</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#f3e8ff">👨‍🏫</div><div><div class="stat-val" id="a-total-faculty">—</div><div class="stat-lbl">Total Faculty</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#dcfce7">✅</div><div><div class="stat-val" id="a-present">—</div><div class="stat-lbl">Present Today</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fee2e2">❌</div><div><div class="stat-val" id="a-absent">—</div><div class="stat-lbl">Absent Today</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">💰</div><div><div class="stat-val" id="a-fees-pending">—</div><div class="stat-lbl">Fees Pending</div></div></div>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card" onclick="goto('a-students')"><div class="quick-icon">👨‍🎓</div><div class="quick-title">Manage Students</div><div class="quick-desc">View & activate accounts</div></div>
+        <div class="quick-card" onclick="goto('a-attendance')"><div class="quick-icon">📋</div><div class="quick-title">Attendance Reports</div><div class="quick-desc">Class-wise analytics</div></div>
+        <div class="quick-card" onclick="goto('a-results')"><div class="quick-icon">📊</div><div class="quick-title">Publish Results</div><div class="quick-desc">Enter semester marks</div></div>
+        <div class="quick-card" onclick="goto('a-fees')"><div class="quick-icon">💰</div><div class="quick-title">Fee Management</div><div class="quick-desc">Update payment records</div></div>
+      </div>
+    </div>
+
+    <!-- A: STUDENTS -->
+    <div id="pg-a-students" class="page">
+      <div class="page-hdr"><h1>Student Management</h1><p>Register and manage student accounts</p></div>
+      <div class="card">
+        <h2>Register New User</h2>
+        <div id="a-reg-alert"></div>
+        <div class="form-grid fg-4 mb-3">
+          <div class="form-group"><label>Full Name</label><input id="a-r-name"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="a-r-email"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="a-r-pass"></div>
+          <div class="form-group"><label>Role</label><select id="a-r-role"><option value="student">Student</option><option value="faculty">Faculty</option><option value="admin">Admin</option></select></div>
+          <div class="form-group"><label>Department</label><input id="a-r-dept"></div>
+          <div class="form-group"><label>Roll Number</label><input id="a-r-roll"></div>
+          <div class="form-group"><label>Semester</label><input type="number" id="a-r-sem"></div>
+          <div class="form-group"><label>Phone</label><input id="a-r-phone"></div>
+        </div>
+        <button class="btn btn-primary" onclick="registerUser()">➕ Register User</button>
+      </div>
+      <div class="card">
+        <div class="row-between mb-3">
+          <h2 style="margin:0" id="a-stu-count">All Students</h2>
+          <input id="a-stu-search" class="input-search" placeholder="Search name, roll, dept..." style="width:220px" oninput="filterStudents()">
+        </div>
+        <div id="a-stu-table"><div class="text-muted text-sm">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- A: ATTENDANCE -->
+    <div id="pg-a-attendance" class="page">
+      <div class="page-hdr"><h1>Attendance Reports</h1><p>View class-wise attendance records</p></div>
+      <div class="card">
+        <div class="row mb-3">
+          <input id="a-att-code" class="input-search" placeholder="Subject Code" style="width:160px">
+          <input id="a-att-date" type="date" class="input-search">
+          <button class="btn btn-primary" onclick="fetchAdminAttendance()">Fetch Records</button>
+        </div>
+        <div id="a-att-summary" class="row mb-2" style="display:none"></div>
+        <div id="a-att-table"><div class="text-muted text-sm">Enter subject code and date to fetch records.</div></div>
+      </div>
+    </div>
+
+    <!-- A: RESULTS -->
+    <div id="pg-a-results" class="page">
+      <div class="page-hdr"><h1>Publish Results</h1><p>Enter and publish student semester marks</p></div>
+      <div class="card">
+        <div id="a-res-alert"></div>
+        <div class="form-grid fg-3 mb-4">
+          <div class="form-group"><label>Student ID</label><input id="a-res-sid" placeholder="MongoDB ObjectId"></div>
+          <div class="form-group"><label>Semester</label><input type="number" id="a-res-sem"></div>
+          <div class="form-group"><label>Academic Year</label><input id="a-res-year" placeholder="2024-25"></div>
+        </div>
+        <div class="row-between mb-3">
+          <h2 style="margin:0">Subject Marks</h2>
+          <button class="btn btn-secondary btn-sm" onclick="addResSubject()">+ Add Subject</button>
+        </div>
+        <div id="a-res-subjects"></div>
+        <button class="btn btn-primary mt-3" onclick="publishResult()">📊 Publish Result</button>
+      </div>
+    </div>
+
+    <!-- A: FEES -->
+    <div id="pg-a-fees" class="page">
+      <div class="page-hdr"><h1>Fee Management</h1><p>Add and update student fee records</p></div>
+      <div class="card">
+        <h2>Add / Update Fee Record</h2>
+        <div id="a-fee-alert"></div>
+        <div class="form-grid fg-4 mb-3">
+          <div class="form-group"><label>Student ID</label><input id="af-sid"></div>
+          <div class="form-group"><label>Semester</label><input type="number" id="af-sem"></div>
+          <div class="form-group"><label>Academic Year</label><input id="af-year" placeholder="2024-25"></div>
+          <div class="form-group"><label>Receipt No</label><input id="af-receipt"></div>
+          <div class="form-group"><label>Tuition Fee (₹)</label><input type="number" id="af-tuition"></div>
+          <div class="form-group"><label>Exam Fee (₹)</label><input type="number" id="af-exam"></div>
+          <div class="form-group"><label>Library Fee (₹)</label><input type="number" id="af-library"></div>
+          <div class="form-group"><label>Other Fee (₹)</label><input type="number" id="af-other"></div>
+          <div class="form-group"><label>Amount Paid (₹)</label><input type="number" id="af-paid"></div>
+          <div class="form-group"><label>Payment Mode</label><select id="af-mode"><option>Cash</option><option>Online</option><option>DD</option><option>Cheque</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveFee()">💰 Save Fee Record</button>
+      </div>
+      <div class="card">
+        <h2>Lookup Student Fees</h2>
+        <div class="row mb-3">
+          <input id="af-lookup-id" class="input-search" placeholder="Student ID (MongoDB ObjectId)" style="flex:1">
+          <button class="btn btn-primary" onclick="lookupFee()">Search</button>
+        </div>
+        <div id="af-lookup-result"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════ STATE ═══ */
+const API = '/api';
+let currentUser = null;
+let allStudents  = [];
+let facultyLogs  = [];
+let facultyNotes = [];
+let resSubjectCount = 1;
+
+/* ═══════════════════════════════════════════════════ DEMO DATA ═══ */
+const DEMO_USERS = {
+  'student@srgc.in': { _id:'stu001', name:'Ravi Kumar', email:'student@srgc.in', role:'student', department:'Computer Science', rollNumber:'CS2021001', semester:5, feesPaid:true, attendanceThreshold:75, token:'demo_student_token' },
+  'faculty@srgc.in': { _id:'fac001', name:'Dr. Priya Sharma', email:'faculty@srgc.in', role:'faculty', department:'Computer Science', employeeId:'FAC101', subjects:['CS301','CS302','CS401'], token:'demo_faculty_token' },
+  'admin@srgc.in':   { _id:'adm001', name:'Admin Singh', email:'admin@srgc.in', role:'admin', department:'Administration', employeeId:'ADM001', token:'demo_admin_token' },
+};
+const DEMO_ATTENDANCE = [
+  { _id:'a1', subjectCode:'CS301', subjectName:'Data Structures', date:'2025-01-15', status:'Present', verifiedDistance:4.2, scanMethod:'QR', studentId:{name:'Ravi Kumar',rollNumber:'CS2021001'} },
+  { _id:'a2', subjectCode:'CS302', subjectName:'Operating Systems', date:'2025-01-15', status:'Present', verifiedDistance:3.8, scanMethod:'QR', studentId:{name:'Ravi Kumar',rollNumber:'CS2021001'} },
+  { _id:'a3', subjectCode:'CS401', subjectName:'Computer Networks', date:'2025-01-14', status:'Absent', scanMethod:'Manual', studentId:{name:'Ravi Kumar',rollNumber:'CS2021001'} },
+  { _id:'a4', subjectCode:'CS301', subjectName:'Data Structures', date:'2025-01-14', status:'Present', verifiedDistance:6.1, scanMethod:'QR', studentId:{name:'Ravi Kumar',rollNumber:'CS2021001'} },
+  { _id:'a5', subjectCode:'CS302', subjectName:'Operating Systems', date:'2025-01-13', status:'Absent', scanMethod:'Manual', studentId:{name:'Ravi Kumar',rollNumber:'CS2021001'} },
+  { _id:'a6', subjectCode:'CS401', subjectName:'Computer Networks', date:'2025-01-13', status:'Present', verifiedDistance:2.9, scanMethod:'QR', studentId:{name:'Ravi Kumar',rollNumber:'CS2021001'} },
+];
+const DEMO_RESULTS = [
+  { _id:'r1', semester:4, academicYear:'2023-24', sgpa:8.2, result:'Pass', subjects:[
+    { subjectCode:'CS201', subjectName:'Algorithms', internalMarks:42, externalMarks:58, totalMarks:100, maxMarks:100, grade:'O', status:'Pass' },
+    { subjectCode:'CS202', subjectName:'Database Systems', internalMarks:38, externalMarks:50, totalMarks:88, maxMarks:100, grade:'A+', status:'Pass' },
+    { subjectCode:'CS203', subjectName:'Theory of Computation', internalMarks:35, externalMarks:45, totalMarks:80, maxMarks:100, grade:'A', status:'Pass' },
+  ]},
+];
+const DEMO_FEES = [
+  { _id:'f1', semester:5, academicYear:'2024-25', tuitionFee:30000, examFee:2000, libraryFee:500, otherFee:1000, totalAmount:33500, paidAmount:33500, dueAmount:0, status:'Paid', paymentMode:'Online', receiptNumber:'SRGC-2024-5001', paymentDate:'2024-07-10' },
+  { _id:'f2', semester:4, academicYear:'2023-24', tuitionFee:30000, examFee:2000, libraryFee:500, otherFee:1000, totalAmount:33500, paidAmount:33500, dueAmount:0, status:'Paid', paymentMode:'Cash', receiptNumber:'SRGC-2023-4021', paymentDate:'2023-07-08' },
+];
+const DEMO_NOTES = [
+  { _id:'n1', subjectCode:'CS301', subjectName:'Data Structures', title:'Unit 3 - Trees & Graphs', description:'Complete notes on binary trees, BST, AVL trees and graph traversals.', department:'Computer Science', semester:5, facultyId:{name:'Dr. Priya Sharma'}, createdAt:'2025-01-10', fileUrl:null },
+  { _id:'n2', subjectCode:'CS302', subjectName:'Operating Systems', title:'Process Scheduling Algorithms', description:'FCFS, SJF, Round Robin and Priority scheduling with solved examples.', department:'Computer Science', semester:5, facultyId:{name:'Dr. Priya Sharma'}, createdAt:'2025-01-08', fileUrl:null },
+  { _id:'n3', subjectCode:'CS401', subjectName:'Computer Networks', title:'TCP/IP Model Explained', description:'Layer-by-layer breakdown of TCP/IP with protocol details and comparison with OSI.', department:'Computer Science', semester:5, facultyId:{name:'Dr. Priya Sharma'}, createdAt:'2025-01-05', fileUrl:null },
+];
+const DEMO_LOGS = [
+  { _id:'l1', subjectCode:'CS301', subjectName:'Data Structures', date:'2025-01-15', lectureSlot:'09:00-10:00', topicCovered:'AVL Tree Rotations', teachingMethod:'Lecture', studentsPresent:42, studentsTotal:48 },
+  { _id:'l2', subjectCode:'CS302', subjectName:'Operating Systems', date:'2025-01-15', lectureSlot:'10:00-11:00', topicCovered:'Process Synchronization - Mutex & Semaphore', teachingMethod:'Lecture', studentsPresent:39, studentsTotal:48 },
+  { _id:'l3', subjectCode:'CS401', subjectName:'Computer Networks', date:'2025-01-14', lectureSlot:'11:00-12:00', topicCovered:'TCP Three-Way Handshake', teachingMethod:'Practical', studentsPresent:44, studentsTotal:48 },
+];
+const DEMO_ADMIN_STUDENTS = [
+  { _id:'stu001', name:'Ravi Kumar', email:'student@srgc.in', rollNumber:'CS2021001', department:'Computer Science', semester:5, feesPaid:true, isActive:true },
+  { _id:'stu002', name:'Anjali Singh', email:'anjali@srgc.in', rollNumber:'CS2021002', department:'Computer Science', semester:5, feesPaid:false, isActive:true },
+  { _id:'stu003', name:'Mohit Sharma', email:'mohit@srgc.in', rollNumber:'ME2021001', department:'Mechanical', semester:3, feesPaid:true, isActive:true },
+  { _id:'stu004', name:'Priya Yadav', email:'priya.y@srgc.in', rollNumber:'CS2021003', department:'Computer Science', semester:5, feesPaid:false, isActive:false },
+  { _id:'stu005', name:'Amit Gupta', email:'amit@srgc.in', rollNumber:'EE2021001', department:'Electrical', semester:5, feesPaid:true, isActive:true },
+];
+
+/* ═══════════════════════════════════════════════════ API WRAPPER (with demo fallback) ═══ */
+async function apiCall(method, path, body) {
+  try {
+    const opts = { method, headers: { 'Content-Type':'application/json' } };
+    if (currentUser?.token) opts.headers['Authorization'] = `Bearer ${currentUser.token}`;
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API + path, opts);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message||'Request failed'); }
+    return await r.json();
+  } catch (e) {
+    if (e.message === 'Failed to fetch' || e.message.includes('NetworkError')) {
+      return demoFallback(method, path, body);
     }
+    throw e;
+  }
+}
+
+function demoFallback(method, path, body) {
+  if (path.startsWith('/auth/login')) {
+    const u = DEMO_USERS[body?.email];
+    if (!u || body?.password !== 'demo123') throw new Error('Invalid email or password.');
+    return { success:true, user:u };
+  }
+  if (path.startsWith('/attendance/student/')) return { success:true, records:DEMO_ATTENDANCE, summary: buildSummary(DEMO_ATTENDANCE) };
+  if (path === '/attendance/scan-qr') return { success:true, message:'✅ Demo: Attendance marked! (3.8m away)' };
+  if (path === '/attendance/generate-qr') return { success:true, qrToken:'DEMO_QR_TOKEN_'+Date.now(), expiresIn:60 };
+  if (path.startsWith('/attendance/class/')) return { success:true, records:DEMO_ATTENDANCE };
+  if (path === '/attendance/manual') return { success:true, message:'Manual attendance entry saved.' };
+  if (path.startsWith('/academic/results/')) return { success:true, results:DEMO_RESULTS };
+  if (path === '/academic/results') return { success:true, message:'Result published successfully.' };
+  if (path.startsWith('/academic/fees/')) return { success:true, fees:DEMO_FEES };
+  if (path === '/academic/fees') return { success:true, message:'Fee record saved.' };
+  if (path.startsWith('/academic/admit-card/')) {
+    return { success:true, eligible:true, feesPaid:true, lowAttendanceSubjects:[], message:'Admit card available for download.' };
+  }
+  if (path.startsWith('/academic/notes') && method==='GET') return { success:true, notes:DEMO_NOTES };
+  if (path === '/academic/notes' && method==='POST') { const n={_id:'n'+Date.now(),...body,facultyId:{name:currentUser?.name},createdAt:new Date().toISOString(),fileUrl:null}; DEMO_NOTES.unshift(n); return {success:true,message:'Notes saved.',note:n}; }
+  if (path === '/academic/lesson-log' && method==='POST') { const l={_id:'l'+Date.now(),...body}; DEMO_LOGS.unshift(l); return {success:true,message:'Lesson log saved.',log:l}; }
+  if (path === '/academic/lesson-log') return { success:true, logs:DEMO_LOGS };
+  if (path === '/academic/admin/stats') return { success:true, stats:{totalStudents:312,totalFaculty:28,presentToday:187,absentToday:94,feesPending:43} };
+  if (path === '/academic/admin/students') return { success:true, students:DEMO_ADMIN_STUDENTS };
+  if (method==='PUT' && path.startsWith('/academic/admin/toggle-user/')) {
+    const id = path.split('/').pop();
+    const s = DEMO_ADMIN_STUDENTS.find(x=>x._id===id);
+    if (s) s.isActive = !s.isActive;
+    return { success:true, message:'User status updated.' };
+  }
+  if (path === '/auth/register') {
+    const u={_id:'new'+Date.now(),...body,feesPaid:false,isActive:true};
+    DEMO_ADMIN_STUDENTS.push(u);
+    return {success:true, user:u, message:'User registered.'};
+  }
+  return { success:true };
+}
+
+function buildSummary(records) {
+  const s = {};
+  records.forEach(r => {
+    if (!s[r.subjectCode]) s[r.subjectCode] = { subjectName:r.subjectName, present:0, absent:0, total:0 };
+    s[r.subjectCode].total++;
+    if (r.status==='Present') s[r.subjectCode].present++; else s[r.subjectCode].absent++;
+  });
+  Object.keys(s).forEach(k => { s[k].percentage = ((s[k].present/s[k].total)*100).toFixed(1); });
+  return s;
+}
+
+/* ═══════════════════════════════════════════════════ AUTH ═══ */
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if (!email || !pass) return showLoginAlert('Please enter email and password.', 'error');
+  const btn = document.getElementById('loginBtn');
+  btn.innerHTML = '<span class="spin"></span> Signing in...';
+  btn.disabled = true;
+  apiCall('POST', '/auth/login', { email, password: pass })
+    .then(data => { currentUser = data.user; localStorage.setItem('srgc_user', JSON.stringify(currentUser)); initApp(); })
+    .catch(e => { showLoginAlert(e.message, 'error'); btn.innerHTML='Sign In'; btn.disabled=false; });
+}
+
+function logout() {
+  currentUser = null; localStorage.removeItem('srgc_user');
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginAlert').innerHTML = '';
+}
+
+function showLoginAlert(msg, type) {
+  const el = document.getElementById('loginAlert');
+  el.innerHTML = `<div class="alert alert-${type==='error'?'error':'info'}" style="margin-bottom:14px">${type==='error'?'⚠️':'ℹ️'} ${msg}</div>`;
+}
+
+/* ═══════════════════════════════════════════════════ ROUTING ═══ */
+const NAV_ITEMS = {
+  student: [
+    { id:'s-dashboard',  icon:'🏠', label:'Dashboard' },
+    { id:'s-attendance', icon:'📋', label:'Attendance' },
+    { id:'s-results',    icon:'📊', label:'Results' },
+    { id:'s-fees',       icon:'💰', label:'Fees' },
+    { id:'s-notes',      icon:'📚', label:'Notes' },
+    { id:'s-admit',      icon:'🎫', label:'Admit Card' },
+  ],
+  faculty: [
+    { id:'f-dashboard',  icon:'🏠', label:'Dashboard' },
+    { id:'f-qr',         icon:'📲', label:'QR Generator' },
+    { id:'f-attendance', icon:'📋', label:'Attendance' },
+    { id:'f-notes',      icon:'📚', label:'Upload Notes' },
+    { id:'f-lessonlog',  icon:'📝', label:'Lesson Log' },
+  ],
+  admin: [
+    { id:'a-dashboard',  icon:'🏠', label:'Dashboard' },
+    { id:'a-students',   icon:'👨‍🎓', label:'Students' },
+    { id:'a-attendance', icon:'📋', label:'Attendance' },
+    { id:'a-results',    icon:'📊', label:'Results' },
+    { id:'a-fees',       icon:'💰', label:'Fees' },
+  ],
+};
+const PAGE_MAP = { 's-dashboard':'pg-s-dashboard','s-attendance':'pg-s-attendance','s-results':'pg-s-results','s-fees':'pg-s-fees','s-notes':'pg-s-notes','s-admit':'pg-s-admit','f-dashboard':'pg-f-dashboard','f-qr':'pg-f-qr','f-attendance':'pg-f-attendance','f-notes':'pg-f-notes','f-lessonlog':'pg-f-lessonlog','a-dashboard':'pg-a-dashboard','a-students':'pg-a-students','a-attendance':'pg-a-attendance','a-results':'pg-a-results','a-fees':'pg-a-fees' };
+
+let currentPage = '';
+function goto(id) {
+  if (currentPage === id) return;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const pg = document.getElementById(PAGE_MAP[id]);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.nav-link[data-id="'+id+'"]').forEach(l => l.classList.add('active'));
+  currentPage = id;
+  loadPage(id);
+}
+
+function loadPage(id) {
+  if (id==='s-dashboard')  loadStudentDashboard();
+  if (id==='s-attendance') loadStudentAttendance();
+  if (id==='s-results')    loadStudentResults();
+  if (id==='s-fees')       loadStudentFees();
+  if (id==='s-notes')      loadStudentNotes();
+  if (id==='s-admit')      loadAdmitCard();
+  if (id==='f-dashboard')  loadFacultyDashboard();
+  if (id==='f-attendance') { document.getElementById('f-att-date').value = today(); }
+  if (id==='f-lessonlog')  { document.getElementById('ll-date').value = today(); loadLessonLogs(); }
+  if (id==='f-notes')      loadFacultyNotes();
+  if (id==='a-dashboard')  loadAdminDashboard();
+  if (id==='a-students')   loadAdminStudents();
+  if (id==='a-results')    initResSubjects();
+  if (id==='a-attendance') { document.getElementById('a-att-date').value = today(); }
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+/* ═══════════════════════════════════════════════════ INIT ═══ */
+function initApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appShell').classList.remove('hidden');
+  const u = currentUser;
+  document.getElementById('sideAvatar').textContent = u.name.charAt(0).toUpperCase();
+  document.getElementById('sideName').textContent = u.name;
+  document.getElementById('sideRole').textContent = u.role.charAt(0).toUpperCase()+u.role.slice(1)+' · '+u.department;
+  const nav = document.getElementById('sideNav');
+  nav.innerHTML = '';
+  (NAV_ITEMS[u.role]||[]).forEach(item => {
+    const a = document.createElement('div');
+    a.className='nav-link'; a.dataset.id=item.id;
+    a.innerHTML = `<span class="nav-icon">${item.icon}</span>${item.label}`;
+    a.onclick = () => goto(item.id);
+    nav.appendChild(a);
+  });
+  const defaultPage = { student:'s-dashboard', faculty:'f-dashboard', admin:'a-dashboard' }[u.role];
+  goto(defaultPage);
+}
+
+/* ═══════════════════════════════════════════════════ STUDENT PAGES ═══ */
+function loadStudentDashboard() {
+  const u = currentUser;
+  document.getElementById('s-welcome').textContent = `Welcome back, ${u.name.split(' ')[0]} 👋`;
+  document.getElementById('s-info').textContent = `${u.department} · Semester ${u.semester} · ${new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+  document.getElementById('s-sem').textContent = `Sem ${u.semester}`;
+  document.getElementById('s-fee-status').innerHTML = u.feesPaid ? '<span class="green">Paid</span>' : '<span class="red">Pending</span>';
+  apiCall('GET', `/attendance/student/${u._id}`).then(data => {
+    const entries = Object.entries(data.summary||{});
+    document.getElementById('s-sub-count').textContent = entries.length;
+    const avg = entries.length ? (entries.reduce((s,[,v])=>s+parseFloat(v.percentage),0)/entries.length).toFixed(1) : 0;
+    document.getElementById('s-att-pct').textContent = avg+'%';
+    const bars = document.getElementById('s-att-bars');
+    if (!entries.length) { bars.innerHTML='<div class="text-muted text-sm">No attendance records yet.</div>'; return; }
+    bars.innerHTML = entries.map(([code,d]) => {
+      const pct = parseFloat(d.percentage);
+      const col = pct>=75?'#22c55e':pct>=60?'#f59e0b':'#ef4444';
+      return `<div class="subject-row"><div class="subject-hdr"><div><span class="fw-6 text-sm">${d.subjectName}</span><span class="text-xs text-muted" style="margin-left:6px">(${code})</span></div><div class="text-sm fw-7" style="color:${col}">${d.present}/${d.total} — ${pct}%</div></div><div class="progress"><div class="progress-bar" style="width:${pct}%;background:${col}"></div></div></div>`;
+    }).join('');
+  }).catch(()=>{document.getElementById('s-att-bars').innerHTML='<div class="text-muted text-sm">Failed to load.</div>';});
+}
+
+function loadStudentAttendance() {
+  const u = currentUser;
+  apiCall('GET', `/attendance/student/${u._id}`).then(data => {
+    const entries = Object.entries(data.summary||{});
+    const tbl = document.getElementById('s-att-table');
+    if (!entries.length) { tbl.innerHTML='<div class="text-muted text-sm">No attendance records found.</div>'; return; }
+    tbl.innerHTML = `<table class="tbl"><thead><tr><th>Subject</th><th>Present</th><th class="tc">Total</th><th class="tc">%</th><th class="tc">Status</th></tr></thead><tbody>`+entries.map(([code,d])=>{const p=parseFloat(d.percentage);return `<tr><td><div class="fw-6">${d.subjectName}</div><div class="text-xs text-muted">${code}</div></td><td>${d.present}</td><td class="tc">${d.total}</td><td class="tc fw-7 ${p>=75?'green':p>=60?'amber':'red'}">${p}%</td><td class="tc">${p>=75?'<span class="badge bg">Good</span>':p>=60?'<span class="badge ba">Low</span>':'<span class="badge br">Critical</span>'}</td></tr>`;}).join('')+`</tbody></table>`;
+    const rec = document.getElementById('s-att-recent');
+    rec.innerHTML = (data.records||[]).slice(0,15).map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9"><div><span class="fw-6 text-sm">${r.subjectName}</span><span class="text-xs text-muted" style="margin-left:8px">${r.date}</span></div><span class="badge ${r.status==='Present'?'bg':'br'}">${r.status}</span></div>`).join('') || '<div class="text-muted text-sm">No records.</div>';
+  }).catch(()=>{document.getElementById('s-att-table').innerHTML='<div class="text-muted text-sm">Failed to load.</div>';});
+}
+
+function studentScanQR() {
+  const token = document.getElementById('s-qr-token').value.trim();
+  const alert = document.getElementById('s-scan-alert');
+  if (!token) { alert.innerHTML=mkAlert('Please paste the QR token from faculty.','error'); return; }
+  const btn = document.getElementById('s-scan-btn');
+  btn.textContent='Locating...'; btn.disabled=true;
+  if (!navigator.geolocation) { alert.innerHTML=mkAlert('GPS not supported on this device.','error'); btn.textContent='📲 Check In'; btn.disabled=false; return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    apiCall('POST', '/attendance/scan-qr', { qrToken:token, studentLat:pos.coords.latitude, studentLon:pos.coords.longitude })
+      .then(d => { alert.innerHTML=mkAlert(d.message,'success'); document.getElementById('s-qr-token').value=''; loadStudentAttendance(); })
+      .catch(e => { alert.innerHTML=mkAlert(e.message,'error'); })
+      .finally(() => { btn.textContent='📲 Check In'; btn.disabled=false; });
+  }, () => { alert.innerHTML=mkAlert('GPS access denied. Enable location permissions.','error'); btn.textContent='📲 Check In'; btn.disabled=false; }, { enableHighAccuracy:true, timeout:10000 });
+}
+
+function loadStudentResults() {
+  apiCall('GET', `/academic/results/${currentUser._id}`).then(data => {
+    const wrap = document.getElementById('s-results-wrap');
+    if (!data.results?.length) { wrap.innerHTML='<div class="card"><div class="text-muted text-sm">No results published yet.</div></div>'; return; }
+    wrap.innerHTML = data.results.map(r => `<div class="results-block"><div class="results-hdr"><h3>Semester ${r.semester} · ${r.academicYear}<span style="margin-left:10px;font-size:12px;color:#64748b">SGPA: <strong class="blue">${r.sgpa}</strong></span></h3><span class="badge ${r.result==='Pass'?'bg':'br'}">${r.result}</span></div><div style="padding:16px"><table class="tbl"><thead><tr><th>Subject</th><th class="tc">Internal</th><th class="tc">External</th><th class="tc">Total</th><th class="tc">Grade</th><th class="tc">Status</th></tr></thead><tbody>${r.subjects.map(s=>`<tr><td><div class="fw-6 text-sm">${s.subjectName}</div><div class="text-xs text-muted">${s.subjectCode}</div></td><td class="tc">${s.internalMarks}</td><td class="tc">${s.externalMarks}</td><td class="tc fw-7">${s.totalMarks}/${s.maxMarks}</td><td class="tc fw-7 ${s.grade==='O'?'green':s.grade==='F'?'red':'blue'}">${s.grade}</td><td class="tc"><span class="badge ${s.status==='Pass'?'bg':'br'}">${s.status}</span></td></tr>`).join('')}</tbody></table></div></div>`).join('');
+  }).catch(()=>{ document.getElementById('s-results-wrap').innerHTML='<div class="card"><div class="text-muted text-sm">Failed to load results.</div></div>'; });
+}
+
+function loadStudentFees() {
+  apiCall('GET', `/academic/fees/${currentUser._id}`).then(data => {
+    const wrap = document.getElementById('s-fees-wrap');
+    if (!data.fees?.length) { wrap.innerHTML='<div class="card"><div class="text-muted text-sm">No fee records found.</div></div>'; return; }
+    wrap.innerHTML = data.fees.map(f => `<div class="card"><div class="row-between mb-3"><div><h2 style="margin:0">Semester ${f.semester} · ${f.academicYear}</h2>${f.receiptNumber?`<div class="text-xs text-muted mt-1">Receipt: ${f.receiptNumber}</div>`:''}</div><span class="badge ${f.status==='Paid'?'bg':f.status==='Partial'?'ba':'br'}">${f.status}</span></div><div class="fee-row"><div class="fee-box"><div class="fl">Tuition Fee</div><div class="fv">₹${(f.tuitionFee||0).toLocaleString('en-IN')}</div></div><div class="fee-box"><div class="fl">Exam Fee</div><div class="fv">₹${(f.examFee||0).toLocaleString('en-IN')}</div></div><div class="fee-box"><div class="fl">Library Fee</div><div class="fv">₹${(f.libraryFee||0).toLocaleString('en-IN')}</div></div><div class="fee-box"><div class="fl">Other Fee</div><div class="fv">₹${(f.otherFee||0).toLocaleString('en-IN')}</div></div></div><div class="fee-totals"><div><div class="text-xs text-muted">Total Amount</div><div class="fw-7">₹${(f.totalAmount||0).toLocaleString('en-IN')}</div></div><div><div class="text-xs text-muted">Amount Paid</div><div class="fw-7 green">₹${(f.paidAmount||0).toLocaleString('en-IN')}</div></div><div><div class="text-xs text-muted">Balance Due</div><div class="fw-7 ${f.dueAmount>0?'red':'green'}">₹${(f.dueAmount||0).toLocaleString('en-IN')}</div></div></div>${f.paymentDate?`<div class="text-xs text-muted mt-2">Paid on ${new Date(f.paymentDate).toLocaleDateString('en-IN')} via ${f.paymentMode}</div>`:''}</div>`).join('');
+  });
+}
+
+function loadStudentNotes() {
+  const u = currentUser;
+  apiCall('GET', `/academic/notes?department=${u.department}&semester=${u.semester}`).then(data => {
+    const wrap = document.getElementById('s-notes-wrap');
+    if (!data.notes?.length) { wrap.innerHTML='<div class="text-muted text-sm">No notes uploaded yet for your department and semester.</div>'; return; }
+    wrap.innerHTML='<div class="note-grid">'+data.notes.map(n=>`<div class="note-card"><div class="note-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div class="ni">📄</div><span class="badge bb">${n.subjectCode}</span></div><h3>${n.title}</h3>${n.description?`<p>${n.description}</p>`:''}<div class="text-xs text-muted mb-2">By ${n.facultyId?.name||'Faculty'} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</div>${n.fileUrl?`<a href="${n.fileUrl}" target="_blank" style="font-size:12px;font-weight:600;color:var(--blue);text-decoration:none">📥 Download File</a>`:''}</div></div>`).join('')+'</div>';
+  });
+}
+
+function loadAdmitCard() {
+  apiCall('GET', `/academic/admit-card/${currentUser._id}`).then(data => {
+    const u = currentUser;
+    const wrap = document.getElementById('s-admit-wrap');
+    let html = `<div class="eligible-banner ${data.eligible?'yes':'no'}"><div class="eligible-ico">${data.eligible?'✅':'❌'}</div><div><div class="eligible-title">${data.eligible?'You are eligible for the exam!':'Not eligible for admit card'}</div><div class="eligible-sub">${data.message}</div></div></div>`;
+    html += `<div class="card"><h2>Eligibility Checklist</h2><div class="checklist-item"><div class="check-ico">${data.feesPaid?'✅':'❌'}</div><div><div class="check-title">Fee Clearance</div><div class="check-sub">${data.feesPaid?'All dues cleared':'Fee payment pending'}</div></div></div><div class="checklist-item"><div class="check-ico">${(!data.lowAttendanceSubjects?.length)?'✅':'❌'}</div><div><div class="check-title">Attendance ≥ 75%</div><div class="check-sub">${data.lowAttendanceSubjects?.length?'Low attendance in: '+data.lowAttendanceSubjects.join(', '):'All subjects meet criteria'}</div></div></div></div>`;
+    if (data.eligible) {
+      html += `<div class="card"><h2>Admit Card Preview</h2><div class="admit-preview"><div class="ah">SHRI RAM GROUP OF COLLEGES</div><div class="as">Muzaffarnagar, Uttar Pradesh</div><div class="ar"><span class="ak">Student Name:</span><span class="av">${u.name}</span><span class="ak">Roll Number:</span><span class="av">${u.rollNumber}</span><span class="ak">Department:</span><span class="av">${u.department}</span><span class="ak">Semester:</span><span class="av">${u.semester}</span><span class="ak">Issued:</span><span class="av">${new Date().toLocaleDateString('en-IN')}</span></div></div><button class="btn btn-primary mt-3" onclick="downloadAdmitCard()">📥 Download Admit Card</button></div>`;
+    }
+    wrap.innerHTML = html;
+  });
+}
+
+function downloadAdmitCard() {
+  const u = currentUser;
+  const txt = `SHRI RAM GROUP OF COLLEGES, MUZAFFARNAGAR\n${'─'.repeat(44)}\nADMIT CARD – SEMESTER EXAMINATION\n${'─'.repeat(44)}\n\nStudent Name  : ${u.name}\nRoll Number   : ${u.rollNumber}\nDepartment    : ${u.department}\nSemester      : ${u.semester}\nAcademic Year : ${new Date().getFullYear()}-${new Date().getFullYear()+1}\n\n${'─'.repeat(44)}\nSystem-generated admit card. Issued: ${new Date().toLocaleDateString('en-IN')}`;
+  const a = document.createElement('a'); a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt); a.download=`AdmitCard_${u.rollNumber}_Sem${u.semester}.txt`; a.click();
+}
+
+/* ═══════════════════════════════════════════════════ FACULTY PAGES ═══ */
+let qrTimerInterval = null;
+
+function loadFacultyDashboard() {
+  const u = currentUser;
+  document.getElementById('f-welcome').textContent = `Good morning, ${u.name.split(' ')[0]} 👋`;
+  document.getElementById('f-info').textContent = `${u.department} · ${new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+  document.getElementById('f-sub-count').textContent = u.subjects?.length || 0;
+  apiCall('GET', '/academic/lesson-log').then(data => {
+    facultyLogs = data.logs||[];
+    const t = today();
+    document.getElementById('f-today-logs').textContent = facultyLogs.filter(l=>l.date===t).length;
+    document.getElementById('f-total-logs').textContent = facultyLogs.length;
+    const el = document.getElementById('f-recent-logs');
+    el.innerHTML = facultyLogs.slice(0,5).map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9"><div><div class="fw-6 text-sm">${l.topicCovered}</div><div class="text-xs text-muted">${l.subjectName} · ${l.date} · ${l.lectureSlot}</div></div><span class="badge bb">${l.teachingMethod}</span></div>`).join('') || '<div class="text-muted text-sm">No logs yet.</div>';
+  });
+}
+
+function generateQR() {
+  const code = document.getElementById('f-sub-code').value.trim();
+  const name = document.getElementById('f-sub-name').value.trim();
+  const slot = document.getElementById('f-slot').value.trim();
+  const alert = document.getElementById('f-qr-alert');
+  if (!code||!name||!slot) { alert.innerHTML=mkAlert('All fields are required.','error'); return; }
+  alert.innerHTML='';
+  const btn = document.getElementById('f-qr-btn');
+  btn.textContent='Fetching GPS...'; btn.disabled=true;
+  const doGenerate = (lat, lon) => {
+    apiCall('POST', '/attendance/generate-qr', { facultyLat:lat, facultyLon:lon, subjectCode:code, subjectName:name, lectureSlot:slot })
+      .then(data => {
+        if (qrTimerInterval) clearInterval(qrTimerInterval);
+        let timeLeft = data.expiresIn;
+        renderQR(data.qrToken, timeLeft);
+        qrTimerInterval = setInterval(() => { timeLeft--; updateQRTimer(timeLeft); if (timeLeft<=0) { clearInterval(qrTimerInterval); expireQR(); } }, 1000);
+      }).catch(e => { alert.innerHTML=mkAlert(e.message,'error'); })
+      .finally(() => { btn.textContent='📲 Generate QR Code'; btn.disabled=false; });
   };
-
-  return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      {/* Left Banner */}
-      <div style={{ flex: 1, background: "linear-gradient(160deg, #020817, #0c1625)", padding: 60, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 30 }}>
-          <div style={{ width: 45, height: 45, background: "linear-gradient(135deg, #1d4ed8, #7c3aed)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Icon name="shield" size={24} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>SRGC Academic Portal</div>
-            <div style={{ color: "#475569", fontSize: 11 }}>Muzaffarnagar</div>
-          </div>
-        </div>
-        <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 15 }}>Your academic universe <span style={{ background: "linear-gradient(90deg, #3b82f6, #8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>awaits.</span></h1>
-        <p style={{ color: "#64748b", maxWidth: 400, fontSize: 14 }}>Attendance, assignments, and fees dashboard.</p>
-      </div>
-
-      {/* Right Login Form */}
-      <div style={{ width: 450, background: "#0f172a", display: "flex", flexDirection: "column", justifyContent: "center", padding: 40, borderLeft: "1px solid #1e293b" }}>
-        <h2 style={{ marginBottom: 20, fontSize: 24 }}>Sign In</h2>
-        
-        <label style={{ fontSize: 12, color: "#94a3b8", marginBottom: 5 }}>Select Role</label>
-        <select value={role} onChange={(e) => setRole(e.target.value)} style={{ padding: 12, background: "#020817", border: "1px solid #334155", color: "white", borderRadius: 8, marginBottom: 15 }}>
-          <option value="student">Student</option>
-          <option value="teacher">Faculty</option>
-          <option value="admin">Administrator</option>
-        </select>
-
-        <label style={{ fontSize: 12, color: "#94a3b8", marginBottom: 5 }}>User ID</label>
-        <input type="text" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder={MOCK_USERS[role]?.userId || ""} style={{ padding: 12, background: "#020817", border: "1px solid #334155", color: "white", borderRadius: 8, marginBottom: 15 }} />
-
-        <label style={{ fontSize: 12, color: "#94a3b8", marginBottom: 5 }}>Password</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" style={{ padding: 12, background: "#020817", border: "1px solid #334155", color: "white", borderRadius: 8, marginBottom: 20 }} />
-
-        <button onClick={handleLogin} style={{ padding: 12, background: "#1d4ed8", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>Login to Portal</button>
-        {error && <p style={{ color: "#ef4444", marginTop: 15, fontSize: 13, textAlign: "center" }}>{error}</p>}
-      </div>
-    </div>
-  );
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(p => doGenerate(p.coords.latitude,p.coords.longitude), () => doGenerate(28.9845,77.7064), { enableHighAccuracy:true });
+  } else { doGenerate(28.9845,77.7064); }
 }
 
-// ─── DASHBOARD PAGE COMPONENT ────────────────────────────────────────────────
-function DashboardPage({ user, onLogout }) {
-  return (
-    <div style={{ padding: 40, maxWidth: 1200, margin: "0 auto" }}>
-      {/* Navbar */}
-      <div style={{ display: "flex", justifyContent: 'space-between', alignItems: "center", borderBottom: "1px solid #1e293b", paddingBottom: 20, marginBottom: 30 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-          <div style={{ width: 45, height: 45, background: "#1e293b", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#3b82f6" }}>{user.avatar}</div>
-          <div>
-            <h2 style={{ margin: 0, fontSize: 20 }}>{user.name}</h2>
-            <p style={{ margin: 0, color: "#64748b", fontSize: 12, textTransform: "uppercase" }}>Role: {user.role}</p>
-          </div>
-        </div>
-        <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "#2d0a0a", border: "1px solid #7f1d1d", color: "#f87171", borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>
-          <Icon name="logout" size={16} /> Logout
-        </button>
-      </div>
-
-      {/* Dynamic Views based on User Role */}
-      <h3 style={{ marginBottom: 20, color: "#94a3b8" }}>Overview Statistics</h3>
-      <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 40 }}>
-        {user.role === "student" && (
-          <>
-            <StatCard label="Course & Stream" value={`${user.course} - ${user.stream}`} sub={`Semester ${user.semester}`} icon={<Icon name="book" />} accent="#3b82f6" />
-            <StatCard label="Roll Number" value={user.rollNo} sub="University Registration" icon={<Icon name="shield" />} accent="#10b981" />
-            <StatCard label="Fee Balance" value={`₹${user.feeStatus.totalFees - user.feeStatus.paidFees} Dues`} sub={user.feeStatus.isDuesCleared ? "Cleared" : "Pending Payment"} icon={<Icon name="shield" />} accent="#f59e0b" />
-          </>
-        )}
-
-        {user.role === "teacher" && (
-          <>
-            <StatCard label="Department" value={user.department} sub="Core Faculty Member" icon={<Icon name="shield" />} accent="#8b5cf6" />
-            <StatCard label="Assigned Subjects" value={`${user.assignedSubjects.length} Modules`} sub={user.assignedSubjects.join(", ")} icon={<Icon name="book" />} accent="#3b82f6" />
-          </>
-        )}
-
-        {user.role === "admin" && (
-          <>
-            <StatCard label="Portal Status" value="System Active" sub="All logs normal" icon={<Icon name="shield" />} accent="#10b981" />
-            <StatCard label="Total Loaded Students" value={`${STUDENTS_LIST.length} Active`} sub="Sync status: OK" icon={<Icon name="users" />} accent="#3b82f6" />
-          </>
-        )}
-      </div>
-
-      {/* Subject Data List */}
-      <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 12, padding: 24 }}>
-        <h3 style={{ margin: "0 0 20px 0" }}>Academic Curriculum Records</h3>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 14 }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #1e293b", color: "#64748b" }}>
-                <th style={{ padding: 12 }}>Code</th>
-                <th style={{ padding: 12 }}>Subject Name</th>
-                <th style={{ padding: 12 }}>Faculty Incharge</th>
-                <th style={{ padding: 12 }}>Credits</th>
-              </tr>
-            </thead>
-            <tbody>
-              {SUBJECTS.map((sub) => (
-                <tr key={sub.id} style={{ borderBottom: "1px solid #1e293b", color: "#e2e8f0" }}>
-                  <td style={{ padding: 12, fontWeight: 600, color: "#3b82f6" }}>{sub.code}</td>
-                  <td style={{ padding: 12 }}>{sub.name}</td>
-                  <td style={{ padding: 12 }}>{sub.teacher}</td>
-                  <td style={{ padding: 12 }}>{sub.credits} HP</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+function renderQR(token, timeLeft) {
+  const display = document.getElementById('f-qr-display');
+  display.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:14px"><div id="qr-timer-badge" class="timer-badge timer-ok">⏱ Expires in ${timeLeft}s</div><div style="padding:16px;border:2px solid #e2e8f0;border-radius:12px;background:#fff"><canvas id="qrCanvas" width="200" height="200"></canvas></div><div style="width:100%"><label style="display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Share Token</label><textarea id="qr-token-text" rows="3" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:11px;font-family:monospace;resize:none;cursor:pointer" onclick="this.select()" readonly>${token}</textarea></div></div>`;
+  drawQR(token);
 }
+
+function drawQR(data) {
+  const canvas = document.getElementById('qrCanvas'); if (!canvas) return;
+  const ctx = canvas.getContext('2d'); const size = 200; const cells = 21;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,size,size);
+  // Simple visual QR-like pattern using data hash
+  const hash = Array.from(data).reduce((a,c)=>((a<<5)-a)+c.charCodeAt(0),0);
+  const cell = size/cells;
+  for (let i=0;i<cells;i++) for (let j=0;j<cells;j++) {
+    const val = (hash*(i+1)*(j+1))%7;
+    if (val<3||(i<7&&j<7)||(i<7&&j>13)||(i>13&&j<7)) { ctx.fillStyle='#1e293b'; ctx.fillRect(j*cell,i*cell,cell,cell); }
+  }
+  ctx.fillStyle='#fff';
+  [[0,0],[0,14],[14,0]].forEach(([r,c])=>{ctx.strokeStyle='#1e293b';ctx.lineWidth=cell;ctx.strokeRect((c+.5)*cell,(r+.5)*cell,6*cell,6*cell);ctx.fillRect((c+2)*cell,(r+2)*cell,3*cell,3*cell);ctx.fillStyle='#1e293b';ctx.fillRect((c+2)*cell,(r+2)*cell,3*cell,3*cell);ctx.fillStyle='#fff';});
+}
+
+function updateQRTimer(t) {
+  const badge = document.getElementById('qr-timer-badge'); if (!badge) return;
+  badge.textContent=`⏱ Expires in ${t}s`;
+  badge.className='timer-badge '+(t>15?'timer-ok':'timer-warn');
+}
+function expireQR() {
+  const display = document.getElementById('f-qr-display');
+  display.innerHTML='<div class="qr-wrap"><div class="qr-placeholder" style="opacity:.4">⏰</div><div class="text-muted text-sm">QR expired. Generate a new one.</div></div>';
+}
+
+function fetchFacultyAttendance() {
+  const code = document.getElementById('f-att-code').value.trim();
+  const date = document.getElementById('f-att-date').value;
+  if (!code) return;
+  apiCall('GET', `/attendance/class/${code}?date=${date}`).then(data => {
+    const rec = data.records||[];
+    const sumEl = document.getElementById('f-att-summary');
+    if (rec.length) {
+      const present = rec.filter(r=>r.status==='Present').length;
+      sumEl.style.display='flex';
+      sumEl.innerHTML=`<div class="badge bg">✅ Present: ${present}</div><div class="badge br">❌ Absent: ${rec.length-present}</div><div class="badge bb">📊 ${rec.length?((present/rec.length)*100).toFixed(1):0}%</div>`;
+    } else sumEl.style.display='none';
+    renderAttTable(rec,'f-att-table');
+  });
+}
+
+function renderAttTable(records, elId) {
+  const el = document.getElementById(elId);
+  if (!records.length) { el.innerHTML='<div class="text-muted text-sm">No records found.</div>'; return; }
+  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Student</th><th>Roll No</th><th class="tc">Date</th><th class="tc">Slot</th><th class="tc">Method</th><th class="tc">Distance</th><th class="tc">Status</th></tr></thead><tbody>${records.map(r=>`<tr><td class="fw-6">${r.studentId?.name||'—'}</td><td class="text-muted">${r.studentId?.rollNumber||'—'}</td><td class="tc">${r.date}</td><td class="tc text-muted">${r.lectureSlot||'—'}</td><td class="tc"><span class="badge bb">${r.scanMethod}</span></td><td class="tc text-muted">${r.verifiedDistance!=null?r.verifiedDistance+'m':'—'}</td><td class="tc"><span class="badge ${r.status==='Present'?'bg':'br'}">${r.status}</span></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function submitManual() {
+  const body = { studentId:v('f-m-sid'), subjectCode:v('f-m-scode'), subjectName:v('f-m-sname'), date:v('f-m-date'), status:v('f-m-status'), lectureSlot:v('f-m-slot') };
+  const alert = document.getElementById('f-manual-alert');
+  apiCall('POST', '/attendance/manual', body).then(d=>{ alert.innerHTML=mkAlert(d.message,'success'); }).catch(e=>{ alert.innerHTML=mkAlert(e.message,'error'); });
+}
+
+function loadFacultyNotes() {
+  apiCall('GET', `/academic/notes?department=${currentUser.department}`).then(data => {
+    facultyNotes = data.notes||[];
+    renderFacultyNotesList();
+  });
+}
+
+function renderFacultyNotesList() {
+  const el = document.getElementById('f-notes-list');
+  el.innerHTML = facultyNotes.length ? facultyNotes.map(n=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9"><div><div class="fw-6 text-sm">${n.title}</div><div class="text-xs text-muted">${n.subjectCode} · Sem ${n.semester} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</div></div>${n.fileUrl?`<a href="${n.fileUrl}" target="_blank" style="font-size:12px;font-weight:600;color:var(--blue);text-decoration:none;margin-left:10px">📥 File</a>`:''}</div>`).join('') : '<div class="text-muted text-sm">No notes uploaded yet.</div>';
+}
+
+function uploadNote() {
+  const body = { subjectCode:v('fn-code'), subjectName:v('fn-name'), title:v('fn-title'), description:v('fn-desc'), department:currentUser.department, semester:v('fn-sem') };
+  const alert = document.getElementById('f-notes-alert');
+  apiCall('POST', '/academic/notes', body).then(d=>{ alert.innerHTML=mkAlert(d.message,'success'); facultyNotes.unshift(d.note||body); renderFacultyNotesList(); ['fn-code','fn-name','fn-title','fn-desc','fn-sem'].forEach(id=>document.getElementById(id).value=''); }).catch(e=>{ alert.innerHTML=mkAlert(e.message,'error'); });
+}
+
+function loadLessonLogs() {
+  apiCall('GET', '/academic/lesson-log').then(data => {
+    facultyLogs = data.logs||[];
+    const el = document.getElementById('f-log-list');
+    el.innerHTML = facultyLogs.length ? `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Subject</th><th>Topic</th><th class="tc">Method</th><th class="tc">Present/Total</th></tr></thead><tbody>${facultyLogs.map(l=>`<tr><td>${l.date}</td><td class="fw-6">${l.subjectName}<div class="text-xs text-muted">${l.lectureSlot}</div></td><td>${l.topicCovered}</td><td class="tc"><span class="badge bb">${l.teachingMethod}</span></td><td class="tc">${l.studentsPresent}/${l.studentsTotal}</td></tr>`).join('')}</tbody></table></div>` : '<div class="text-muted text-sm">No logs recorded yet.</div>';
+  });
+}
+
+function saveLessonLog() {
+  const body = { subjectCode:v('ll-code'), subjectName:v('ll-name'), date:v('ll-date'), lectureSlot:v('ll-slot'), topicCovered:v('ll-topic'), teachingMethod:v('ll-method'), studentsPresent:Number(v('ll-present')), studentsTotal:Number(v('ll-total')), remarks:v('ll-remarks'), department:currentUser.department, semester:v('ll-sem') };
+  const alert = document.getElementById('f-log-alert');
+  apiCall('POST', '/academic/lesson-log', body).then(d=>{ alert.innerHTML=mkAlert(d.message,'success'); facultyLogs.unshift(d.log||body); loadLessonLogs(); ['ll-topic','ll-remarks','ll-present','ll-total'].forEach(id=>document.getElementById(id).value=''); }).catch(e=>{ alert.innerHTML=mkAlert(e.message,'error'); });
+}
+
+/* ═══════════════════════════════════════════════════ ADMIN PAGES ═══ */
+function loadAdminDashboard() {
+  document.getElementById('a-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  apiCall('GET', '/academic/admin/stats').then(data => {
+    const s = data.stats;
+    document.getElementById('a-total-students').textContent = s.totalStudents;
+    document.getElementById('a-total-faculty').textContent = s.totalFaculty;
+    document.getElementById('a-present').textContent = s.presentToday;
+    document.getElementById('a-absent').textContent = s.absentToday;
+    document.getElementById('a-fees-pending').textContent = s.feesPending;
+  });
+}
+
+function loadAdminStudents() {
+  apiCall('GET', '/academic/admin/students').then(data => {
+    allStudents = data.students||[];
+    renderStudentsTable(allStudents);
+  });
+}
+
+function renderStudentsTable(list) {
+  document.getElementById('a-stu-count').textContent = `All Students (${list.length})`;
+  const el = document.getElementById('a-stu-table');
+  el.innerHTML = `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Name</th><th>Roll No</th><th>Email</th><th class="tc">Dept</th><th class="tc">Sem</th><th class="tc">Fees</th><th class="tc">Status</th><th class="tc">Action</th></tr></thead><tbody>${list.map(s=>`<tr><td class="fw-6">${s.name}</td><td class="text-muted">${s.rollNumber||'—'}</td><td class="text-muted text-xs">${s.email}</td><td class="tc">${s.department}</td><td class="tc">${s.semester||'—'}</td><td class="tc"><span class="badge ${s.feesPaid?'bg':'br'}">${s.feesPaid?'Paid':'Pending'}</span></td><td class="tc"><span class="badge ${s.isActive?'bg':'br'}">${s.isActive?'Active':'Inactive'}</span></td><td class="tc"><button class="btn btn-sm ${s.isActive?'btn-danger':'btn-secondary'}" onclick="toggleUser('${s._id}')">${s.isActive?'Deactivate':'Activate'}</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function filterStudents() {
+  const q = document.getElementById('a-stu-search').value.toLowerCase();
+  renderStudentsTable(allStudents.filter(s=> s.name.toLowerCase().includes(q)||s.rollNumber?.toLowerCase().includes(q)||s.department.toLowerCase().includes(q)));
+}
+
+function toggleUser(id) {
+  apiCall('PUT', `/academic/admin/toggle-user/${id}`, {}).then(() => {
+    const s = allStudents.find(x=>x._id===id); if (s) s.isActive=!s.isActive;
+    renderStudentsTable(allStudents);
+  });
+}
+
+function registerUser() {
+  const body = { name:v('a-r-name'), email:v('a-r-email'), password:v('a-r-pass'), role:v('a-r-role'), department:v('a-r-dept'), rollNumber:v('a-r-roll'), semester:Number(v('a-r-sem')), phone:v('a-r-phone') };
+  const alert = document.getElementById('a-reg-alert');
+  apiCall('POST', '/auth/register', body).then(d=>{ alert.innerHTML=mkAlert(`Registered: ${d.user?.name||body.name}`,'success'); allStudents.push({...body,_id:d.user?._id||'new'+Date.now(),feesPaid:false,isActive:true}); renderStudentsTable(allStudents); ['a-r-name','a-r-email','a-r-pass','a-r-dept','a-r-roll','a-r-sem','a-r-phone'].forEach(id=>document.getElementById(id).value=''); }).catch(e=>{ alert.innerHTML=mkAlert(e.message,'error'); });
+}
+
+function fetchAdminAttendance() {
+  const code = document.getElementById('a-att-code').value.trim();
+  const date = document.getElementById('a-att-date').value;
+  if (!code) return;
+  apiCall('GET', `/attendance/class/${code}?date=${date}`).then(data => {
+    const rec = data.records||[];
+    const sumEl = document.getElementById('a-att-summary');
+    if (rec.length) {
+      const present = rec.filter(r=>r.status==='Present').length;
+      sumEl.style.display='flex';
+      sumEl.innerHTML=`<div class="badge bg">✅ Present: ${present}</div><div class="badge br">❌ Absent: ${rec.length-present}</div><div class="badge bb">📊 ${((present/rec.length)*100).toFixed(1)}%</div>`;
+    } else sumEl.style.display='none';
+    renderAttTable(rec,'a-att-table');
+  });
+}
+
+function initResSubjects() {
+  resSubjectCount=1;
+  document.getElementById('a-res-subjects').innerHTML = subjectRow(0);
+}
+function addResSubject() { resSubjectCount++; document.getElementById('a-res-subjects').insertAdjacentHTML('beforeend',subjectRow(resSubjectCount-1)); }
+function subjectRow(i) { return `<div class="form-grid" style="grid-template-columns:1fr 1.5fr 0.8fr 0.8fr 0.8fr auto;gap:10px;align-items:end;background:#f8fafc;padding:12px;border-radius:8px;margin-bottom:10px"><div class="form-group" style="margin:0"><label>Code</label><input id="rs-code-${i}"></div><div class="form-group" style="margin:0"><label>Name</label><input id="rs-name-${i}"></div><div class="form-group" style="margin:0"><label>Internal</label><input type="number" id="rs-int-${i}"></div><div class="form-group" style="margin:0"><label>External</label><input type="number" id="rs-ext-${i}"></div><div class="form-group" style="margin:0"><label>Max</label><input type="number" id="rs-max-${i}" value="100"></div><button class="btn btn-danger btn-sm" style="margin-bottom:1px" onclick="this.parentElement.remove()">✕</button></div>`; }
+
+function publishResult() {
+  const subjects = [];
+  document.querySelectorAll('#a-res-subjects > div').forEach((row,i) => {
+    subjects.push({ subjectCode:row.querySelector(`[id^="rs-code-"]`)?.value, subjectName:row.querySelector(`[id^="rs-name-"]`)?.value, internalMarks:Number(row.querySelector(`[id^="rs-int-"]`)?.value||0), externalMarks:Number(row.querySelector(`[id^="rs-ext-"]`)?.value||0), maxMarks:Number(row.querySelector(`[id^="rs-max-"]`)?.value||100) });
+  });
+  const body = { studentId:v('a-res-sid'), semester:Number(v('a-res-sem')), academicYear:v('a-res-year'), subjects };
+  const alert = document.getElementById('a-res-alert');
+  apiCall('POST', '/academic/results', body).then(d=>{ alert.innerHTML=mkAlert(d.message,'success'); }).catch(e=>{ alert.innerHTML=mkAlert(e.message,'error'); });
+}
+
+function saveFee() {
+  const body = { studentId:v('af-sid'), semester:Number(v('af-sem')), academicYear:v('af-year'), tuitionFee:Number(v('af-tuition')||0), examFee:Number(v('af-exam')||0), libraryFee:Number(v('af-library')||0), otherFee:Number(v('af-other')||0), paidAmount:Number(v('af-paid')||0), paymentMode:v('af-mode'), receiptNumber:v('af-receipt') };
+  apiCall('POST', '/academic/fees', body).then(d=>{ document.getElementById('a-fee-alert').innerHTML=mkAlert(d.message,'success'); }).catch(e=>{ document.getElementById('a-fee-alert').innerHTML=mkAlert(e.message,'error'); });
+}
+
+function lookupFee() {
+  const id = document.getElementById('af-lookup-id').value.trim(); if (!id) return;
+  apiCall('GET', `/academic/fees/${id}`).then(data => {
+    const el = document.getElementById('af-lookup-result');
+    el.innerHTML = data.fees?.length ? data.fees.map(f=>`<div style="background:#f8fafc;border-radius:8px;padding:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><div class="fw-6">Sem ${f.semester} · ${f.academicYear}</div><div class="text-xs text-muted">Total: ₹${f.totalAmount?.toLocaleString('en-IN')} · Paid: ₹${f.paidAmount?.toLocaleString('en-IN')} · Due: ₹${f.dueAmount?.toLocaleString('en-IN')}</div></div><span class="badge ${f.status==='Paid'?'bg':f.status==='Partial'?'ba':'br'}">${f.status}</span></div>`).join('') : '<div class="text-muted text-sm">No fee records found.</div>';
+  });
+}
+
+/* ═══════════════════════════════════════════════════ UTILS ═══ */
+function v(id) { return document.getElementById(id)?.value||''; }
+function mkAlert(msg, type) { const map={success:'alert-success',error:'alert-error',info:'alert-info'}; const ico={success:'✅',error:'⚠️',info:'ℹ️'}; return `<div class="alert ${map[type]||'alert-info'}" style="margin-bottom:12px">${ico[type]||'ℹ️'} ${msg}</div>`; }
+
+/* ═══════════════════════════════════════════════════ BOOT ═══ */
+window.addEventListener('DOMContentLoaded', () => {
+  const stored = localStorage.getItem('srgc_user');
+  if (stored) { try { currentUser=JSON.parse(stored); initApp(); } catch { localStorage.removeItem('srgc_user'); } }
+  document.getElementById('loginPage').style.display = currentUser ? 'none' : 'flex';
+  if (!currentUser) document.getElementById('appShell').classList.add('hidden');
+});
+</script>
+</body>
+</html>
